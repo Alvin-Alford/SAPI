@@ -51,23 +51,29 @@ def connect_device():
         return render_template("terminal.html",Username = json_data)
 
 
-# Endpoint to register a device
 @app.route('/register', methods=['POST'])
 def register_device():
     data = request.json
     username = data.get('User')
-    code = data.get('Code')
+    password = data.get('Password')
     devicename = data.get('Devicename')
-    
-    if not username or not code or not devicename:
+
+    if not username or not password or not devicename:
         return jsonify({'error': 'Invalid data provided'}), 400
-    
+
+    # Check if the entry already exists in the data.txt file
+    with open('/home/alford/mysite/data.txt', 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            if f"{username} {devicename}" in line:
+                return jsonify({'error': 'Device already registered'}), 409
+
+    # If the entry does not exist, append it to the data.txt file
     with open('/home/alford/mysite/data.txt', 'a') as f:
-        f.write(f"{username} {code} {devicename}\n")
-    
+        f.write(f"{username} {password} {devicename}\n")
+
     return jsonify({'message': 'Device registered successfully'}), 201
 
-# Endpoint to send commands to devices
 @app.route('/commands', methods=['POST'])
 def send_command():
 
